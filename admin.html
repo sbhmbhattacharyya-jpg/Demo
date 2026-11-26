@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Demo · Admin Dashboard</title>
+  <!-- Poppins & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ----- CSS variables (dark admin theme) ----- */
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #273549;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --accent: #8b5cf6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: #334155;
+      --shadow-sm: 0 2px 6px rgba(0,0,0,0.3);
+      --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --font: 'Poppins', sans-serif;
+      --sidebar-width: 250px;
+      --header-height: 64px;
+      --bottom-nav-height: 64px;
+      --transition: 0.2s ease;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: var(--font);
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    /* ----- AUTH SCREEN ----- */
+    .auth-screen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(145deg, #0f172a, #1e293b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 5000;
+    }
+    .auth-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+    }
+    .auth-card h1 {
+      font-size: 1.5rem;
+      margin-bottom: 6px;
+      color: var(--primary);
+    }
+    .auth-card p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 24px;
+    }
+
+    /* ----- MAIN LAYOUT ----- */
+    .app-layout {
+      display: none;
+      min-height: 100vh;
+    }
+    .app-layout.visible { display: block; }
+
+    /* ----- SIDEBAR ----- */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-brand {
+      padding: 0 22px 20px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--primary);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .sidebar-brand i { margin-right: 8px; }
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 10px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .sidebar-link i { width: 18px; font-size: 1rem; }
+    .sidebar-link:hover { background: var(--surface-2); color: var(--text); }
+    .sidebar-link.active { background: var(--primary); color: #fff; }
+    .sidebar-link.logout { color: var(--danger); }
+    .sidebar-link.logout i { color: var(--danger); }
+
+    /* ----- MAIN CONTENT ----- */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 24px 28px;
+      min-height: 100vh;
+      transition: margin var(--transition);
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+    .topbar h1 {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .hamburger {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      align-items: center;
+      justify-content: center;
+    }
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      padding: 6px 14px 6px 6px;
+      border-radius: 40px;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+    .user-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #fff;
+    }
+
+    /* ----- VIEWS ----- */
+    .view { display: none; animation: fade 0.25s ease; }
+    .view.active { display: block; }
+    @keyframes fade { from { opacity: 0.4; } to { opacity: 1; } }
+
+    /* ----- DASHBOARD STATS ----- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+    .stat-card {
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-3px); border-color: var(--primary); }
+    .stat-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .stat-info h3 { font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
+    .stat-info p { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* ----- TABLES ----- */
+    .table-wrap {
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 640px;
+    }
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 0.82rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    th {
+      background: var(--surface-2);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: none; }
+    td img.thumb {
+      width: 44px; height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--surface-2);
+    }
+    .table-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* ----- BUTTONS ----- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { opacity: 0.85; }
+    .btn-ghost {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-sm { padding: 7px 12px; font-size: 0.75rem; border-radius: 8px; }
+    .btn-icon-only {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+    }
+    .btn-icon-only:hover { background: var(--border); }
+    .btn-icon-only.danger { color: var(--danger); }
+    .btn-icon-only.danger:hover { background: rgba(239,68,68,0.15); }
+
+    /* ----- MODAL ----- */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      padding: 16px;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity var(--transition), visibility var(--transition);
+    }
+    .modal-overlay.show { visibility: visible; opacity: 1; }
+    .modal-box {
+      background: var(--surface);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 480px;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 26px 22px;
+      position: relative;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+      transform: translateY(12px);
+      transition: transform var(--transition);
+    }
+    .modal-overlay.show .modal-box { transform: translateY(0); }
+    .modal-close {
+      position: absolute;
+      top: 14px; right: 16px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-title { font-size: 1.15rem; font-weight: 600; margin-bottom: 20px; }
+
+    /* ----- FORMS ----- */
+    .input-group { margin-bottom: 14px; }
+    .input-group label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .input-group input, .input-group textarea, .input-group select {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.88rem;
+      background: var(--surface-2);
+      color: var(--text);
+      transition: border-color var(--transition);
+    }
+    .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .input-group textarea { resize: vertical; min-height: 80px; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .error-text { color: var(--danger); font-size: 0.75rem; margin-top: 8px; }
+
+    /* ----- STATUS SELECT ----- */
+    .status-select {
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 40px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* ----- TOAST ----- */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 4000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 90%;
+      max-width: 320px;
+    }
+    @media (max-width: 767px) {
+      .toast-container { bottom: calc(var(--bottom-nav-height) + 16px); right: 50%; transform: translateX(50%); }
+    }
+    .toast {
+      background: var(--surface);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      box-shadow: var(--shadow-md);
+      border-left: 4px solid var(--primary);
+      animation: slideIn 0.25s ease;
+    }
+    .toast.success { border-left-color: var(--success); }
+    .toast.error { border-left-color: var(--danger); }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+    /* ----- BOTTOM NAV (MOBILE) ----- */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: var(--bottom-nav-height);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      z-index: 150;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .bottom-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.62rem;
+      font-weight: 500;
+      padding: 6px 10px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      flex: 1;
+      height: 100%;
+      transition: color var(--transition);
+    }
+    .bottom-nav-item i { font-size: 1.15rem; }
+    .bottom-nav-item.active { color: var(--primary); }
+
+    /* ----- RESPONSIVE ----- */
+    @media (max-width: 1023px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; padding: 18px 16px calc(var(--bottom-nav-height) + 24px); }
+      .hamburger { display: flex; }
+      .bottom-nav { display: flex; }
+      .sidebar-link.active { background: var(--primary); }
+      /* overlay when sidebar open */
+      .sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 99;
+        display: none;
+      }
+      .sidebar-backdrop.show { display: block; }
+    }
+    @media (min-width: 1024px) {
+      .bottom-nav { display: none; }
+    }
+
+    /* small helpers */
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    .mt-2 { margin-top: 8px; }
+    .text-muted { color: var(--text-muted); font-size: 0.8rem; }
+    .hidden { display: none !important; }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .section-header h2 { font-size: 1.1rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<!-- ========== AUTH SCREEN ========== -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <h1><i class="fas fa-store"></i> Demo Admin</h1>
+    <p>Sign in to manage your store</p>
+    <form id="adminLoginForm">
+      <div class="input-group">
+        <label>Email</label>
+        <input type="email" id="adminEmail" placeholder="admin@example.com" required>
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="adminPassword" placeholder="••••••••" required>
+      </div>
+      <div class="error-text" id="adminLoginError"></div>
+      <button type="submit" class="btn btn-primary" style="width:100%; margin-top:8px; padding:13px;">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- ========== SIDEBAR BACKDROP ========== -->
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<!-- ========== MAIN APP LAYOUT ========== -->
+<div class="app-layout" id="appLayout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><i class="fas fa-store"></i> Demo Admin</div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-link active" data-view="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</button>
+      <button class="sidebar-link" data-view="products"><i class="fas fa-box"></i> Products</button>
+      <button class="sidebar-link" data-view="orders"><i class="fas fa-receipt"></i> Orders</button>
+      <button class="sidebar-link" data-view="slider"><i class="fas fa-images"></i> Slider</button>
+      <button class="sidebar-link" data-view="messages"><i class="fas fa-envelope"></i> Messages</button>
+      <button class="sidebar-link logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="hamburger" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="user-badge">
+          <div class="user-avatar" id="adminAvatar">A</div>
+          <span id="adminEmailLabel" style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DASHBOARD VIEW ===== -->
+    <section class="view active" id="view-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(59,130,246,0.15); color:#3b82f6;"><i class="fas fa-box"></i></div>
+          <div class="stat-info"><h3 id="statProducts">0</h3><p>Total Products</p></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(139,92,246,0.15); color:#8b5cf6;"><i class="fas fa-receipt"></i></div>
+          <div class="stat-info"><h3 id="statOrders">0</h3><p>Total Orders</p></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(16,185,129,0.15); color:#10b981;"><i class="fas fa-users"></i></div>
+          <div class="stat-info"><h3 id="statUsers">0</h3><p>Total Users</p></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(245,158,11,0.15); color:#f59e0b;"><i class="fas fa-envelope"></i></div>
+          <div class="stat-info"><h3 id="statMessages">0</h3><p>Total Messages</p></div>
+        </div>
+      </div>
+      <div class="section-header"><h2>Recent Orders</h2></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody id="recentOrdersBody"><tr><td colspan="5" class="table-empty">No orders yet.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== PRODUCTS VIEW ===== -->
+    <section class="view" id="view-products">
+      <div class="section-header">
+        <h2>Products</h2>
+        <button class="btn btn-primary" id="addProductBtn"><i class="fas fa-plus"></i> Add Product</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Description</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="productsTableBody"><tr><td colspan="6" class="table-empty">No products yet.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== ORDERS VIEW ===== -->
+    <section class="view" id="view-orders">
+      <div class="section-header">
+        <h2>All Orders</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th><th>Customer</th><th>Phone</th><th>Email</th>
+              <th>Address</th><th>Date</th><th>Total</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody"><tr><td colspan="9" class="table-empty">No orders yet.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== SLIDER VIEW ===== -->
+    <section class="view" id="view-slider">
+      <div class="section-header">
+        <h2>Slider Images</h2>
+        <button class="btn btn-primary" id="addSliderBtn"><i class="fas fa-plus"></i> Add Image</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Preview</th><th>Image URL</th><th>Actions</th></tr></thead>
+          <tbody id="sliderTableBody"><tr><td colspan="3" class="table-empty">No slider images yet.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== MESSAGES VIEW ===== -->
+    <section class="view" id="view-messages">
+      <div class="section-header"><h2>Contact Messages</h2></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Sender Name</th><th>Sender Email</th><th>Message</th></tr></thead>
+          <tbody id="messagesTableBody"><tr><td colspan="4" class="table-empty">No messages yet.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== MOBILE BOTTOM NAV ===== -->
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="bottom-nav-item active" data-view="dashboard"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+    <button class="bottom-nav-item" data-view="products"><i class="fas fa-box"></i><span>Products</span></button>
+    <button class="bottom-nav-item" data-view="orders"><i class="fas fa-receipt"></i><span>Orders</span></button>
+    <button class="bottom-nav-item" data-view="slider"><i class="fas fa-images"></i><span>Slider</span></button>
+    <button class="bottom-nav-item" data-view="messages"><i class="fas fa-envelope"></i><span>Messages</span></button>
+  </nav>
+
+</div>
+
+<!-- ========== TOAST CONTAINER ========== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ========== PRODUCT MODAL ========== -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeProductModal"><i class="fas fa-times"></i></button>
+    <h2 class="modal-title" id="productModalTitle">Add Product</h2>
+    <form id="productForm">
+      <input type="hidden" id="productIdInput">
+      <div class="input-group"><label>Product Name</label><input type="text" id="prodName" required></div>
+      <div class="form-row">
+        <div class="input-group"><label>Category</label><input type="text" id="prodCategory" required></div>
+        <div class="input-group"><label>Price (₹)</label><input type="number" id="prodPrice" min="0" step="0.01" required></div>
+      </div>
+      <div class="input-group"><label>Image URL</label><input type="url" id="prodImage" placeholder="https://..."></div>
+      <div class="input-group"><label>Description</label><textarea id="prodDescription" rows="3"></textarea></div>
+      <div class="error-text" id="productFormError"></div>
+      <button type="submit" class="btn btn-primary" style="width:100%; margin-top:6px;">Save Product</button>
+    </form>
+  </div>
+</div>
+
+<!-- ========== SLIDER MODAL ========== -->
+<div class="modal-overlay" id="sliderModal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeSliderModal"><i class="fas fa-times"></i></button>
+    <h2 class="modal-title">Add Slider Image</h2>
+    <form id="sliderForm">
+      <div class="input-group"><label>Image URL</label><input type="url" id="sliderImageUrl" placeholder="https://..." required></div>
+      <div class="error-text" id="sliderFormError"></div>
+      <button type="submit" class="btn btn-primary" style="width:100%; margin-top:6px;">Add Image</button>
+    </form>
+  </div>
+</div>
+
+<!-- ========== CONFIRM MODAL ========== -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box" style="max-width:380px;">
+    <button class="modal-close" id="closeConfirmModal"><i class="fas fa-times"></i></button>
+    <h2 class="modal-title">Confirm Delete</h2>
+    <p class="text-muted" id="confirmMessage" style="margin-bottom:20px;">Are you sure? This action cannot be undone.</p>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-ghost" id="cancelConfirmBtn" style="flex:1;">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn" style="flex:1;">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== FIREBASE + APP LOGIC ========== -->
+<script type="module">
+  // === Firebase v9 modular SDK imports ===
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getDatabase, ref, set, get, push, update, remove, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+  // === YOUR FIREBASE CONFIG (same as storefront) ===
+  const firebaseConfig = {
+    apiKey: "AIzaSyC98PnLiDyN-CPFqaGbsKKX_Tvj_rxCokI",
+    authDomain: "fir-f68eb.firebaseapp.com",
+    databaseURL: "https://fir-f68eb-default-rtdb.firebaseio.com",
+    projectId: "fir-f68eb",
+    storageBucket: "fir-f68eb.firebasestorage.app",
+    messagingSenderId: "880293064196",
+    appId: "1:880293064196:web:11a710a2339b139896cf51"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  // === GLOBAL STATE ===
+  let currentUser = null;
+  let products = {};
+  let orders = {};          // flattened view of all orders
+  let sliderImages = {};
+  let messages = {};
+  let users = {};
+  let pendingDelete = null; // { type, id, orderUserId }
+
+  const $ = id => document.getElementById(id);
+  const $$ = sel => document.querySelectorAll(sel);
+
+  // === TOAST ===
+  function showToast(msg, type = '') {
+    const container = $('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2800);
+  }
+
+  // === AUTH STATE ===
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    if (user) {
+      $('authScreen').style.display = 'none';
+      $('appLayout').classList.add('visible');
+      const email = user.email || 'admin';
+      $('adminEmailLabel').textContent = email;
+      $('adminAvatar').textContent = email[0].toUpperCase();
+      startListeners();
+      switchView('dashboard');
+    } else {
+      $('authScreen').style.display = 'flex';
+      $('appLayout').classList.remove('visible');
+      detachListeners();
+    }
+  });
+
+  // === LOGIN FORM ===
+  $('adminLoginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    $('adminLoginError').textContent = '';
+    try {
+      await signInWithEmailAndPassword(auth, $('adminEmail').value, $('adminPassword').value);
+      $('adminEmail').value = '';
+      $('adminPassword').value = '';
+    } catch (err) {
+      $('adminLoginError').textContent = err.message;
+    }
+  });
+
+  // === LOGOUT ===
+  $('logoutBtn').addEventListener('click', () => {
+    signOut(auth).then(() => showToast('Logged out', 'success'));
+  });
+
+  // === SIDEBAR (mobile) ===
+  const sidebar = $('sidebar');
+  const backdrop = $('sidebarBackdrop');
+  $('hamburgerBtn').addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    backdrop.classList.toggle('show', sidebar.classList.contains('open'));
+  });
+  backdrop.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('show');
+  });
+
+  // === VIEW SWITCHING ===
+  let currentView = 'dashboard';
+  function switchView(view) {
+    currentView = view;
+    $$('.view').forEach(v => v.classList.remove('active'));
+    const target = $('view-' + view);
+    if (target) target.classList.add('active');
+    // titles
+    const titles = { dashboard:'Dashboard', products:'Products', orders:'Orders', slider:'Slider', messages:'Messages' };
+    $('pageTitle').textContent = titles[view] || 'Dashboard';
+    // sidebar active
+    $$('.sidebar-link').forEach(l => {
+      l.classList.toggle('active', l.dataset.view === view);
+    });
+    // bottom nav active
+    $$('.bottom-nav-item').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === view);
+    });
+    // close mobile sidebar
+    if (window.innerWidth < 1024) {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('show');
+    }
+  }
+
+  $$('.sidebar-link[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => switchView(btn.dataset.view));
+  });
+  $$('.bottom-nav-item[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => switchView(btn.dataset.view));
+  });
+
+  // === FIREBASE LISTENERS ===
+  let listeners = [];
+  function startListeners() {
+    detachListeners();
+
+    // Products
+    listeners.push(onValue(ref(db, 'products'), (snap) => {
+      products = snap.val() || {};
+      renderProducts();
+      $('statProducts').textContent = Object.keys(products).length;
+      if (currentView === 'products') renderProducts();
+    }));
+
+    // Orders (flatten)
+    listeners.push(onValue(ref(db, 'orders'), (snap) => {
+      orders = {};
+      const val = snap.val() || {};
+      Object.entries(val).forEach(([uid, userOrders]) => {
+        Object.entries(userOrders || {}).forEach(([oid, order]) => {
+          orders[oid] = { ...order, _userId: uid };
+        });
+      });
+      $('statOrders').textContent = Object.keys(orders).length;
+      if (currentView === 'orders') renderOrders();
+      if (currentView === 'dashboard') renderRecentOrders();
+    }));
+
+    // Users
+    listeners.push(onValue(ref(db, 'users'), (snap) => {
+      users = snap.val() || {};
+      $('statUsers').textContent = Object.keys(users).length;
+    }));
+
+    // Messages
+    listeners.push(onValue(ref(db, 'messages'), (snap) => {
+      messages = snap.val() || {};
+      $('statMessages').textContent = Object.keys(messages).length;
+      if (currentView === 'messages') renderMessages();
+    }));
+
+    // Slider
+    listeners.push(onValue(ref(db, 'sliderImages'), (snap) => {
+      sliderImages = snap.val() || {};
+      if (currentView === 'slider') renderSlider();
+    }));
+  }
+
+  function detachListeners() {
+    listeners.forEach(unsub => { try { unsub(); } catch(e){} });
+    listeners = [];
+  }
+
+  // === RENDER: PRODUCTS ===
+  function renderProducts() {
+    const tbody = $('productsTableBody');
+    const list = Object.entries(products).map(([id, p]) => ({ id, ...p }));
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="table-empty">No products yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(p => `
+      <tr>
+        <td><img class="thumb" src="${p.imageUrl || 'https://via.placeholder.com/44'}" alt=""></td>
+        <td><strong>${p.name || '—'}</strong></td>
+        <td><span class="text-muted">${p.category || '—'}</span></td>
+        <td>₹${p.price || 0}</td>
+        <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.description || '—'}</td>
+        <td>
+          <button class="btn-icon-only" data-edit-product="${p.id}" title="Edit"><i class="fas fa-pen"></i></button>
+          <button class="btn-icon-only danger" data-delete-product="${p.id}" title="Delete"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('[data-edit-product]').forEach(b => {
+      b.addEventListener('click', () => openProductModal(b.dataset.editProduct));
+    });
+    tbody.querySelectorAll('[data-delete-product]').forEach(b => {
+      b.addEventListener('click', () => {
+        pendingDelete = { type: 'product', id: b.dataset.deleteProduct };
+        $('confirmMessage').textContent = `Delete product "${products[b.dataset.deleteProduct]?.name || ''}"? This cannot be undone.`;
+        $('confirmModal').classList.add('show');
+      });
+    });
+  }
+
+  // === PRODUCT MODAL ===
+  function openProductModal(id = null) {
+    $('productFormError').textContent = '';
+    $('productForm').reset();
+    $('productIdInput').value = '';
+    if (id && products[id]) {
+      const p = products[id];
+      $('productModalTitle').textContent = 'Edit Product';
+      $('productIdInput').value = id;
+      $('prodName').value = p.name || '';
+      $('prodCategory').value = p.category || '';
+      $('prodPrice').value = p.price || '';
+      $('prodImage').value = p.imageUrl || '';
+      $('prodDescription').value = p.description || '';
+    } else {
+      $('productModalTitle').textContent = 'Add Product';
+    }
+    $('productModal').classList.add('show');
+  }
+
+  $('addProductBtn').addEventListener('click', () => openProductModal());
+  $('closeProductModal').addEventListener('click', () => $('productModal').classList.remove('show'));
+  $('productModal').addEventListener('click', (e) => { if (e.target === $('productModal')) $('productModal').classList.remove('show'); });
+
+  $('productForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = $('productIdInput').value;
+    const data = {
+      name: $('prodName').value.trim(),
+      category: $('prodCategory').value.trim(),
+      price: parseFloat($('prodPrice').value) || 0,
+      imageUrl: $('prodImage').value.trim(),
+      description: $('prodDescription').value.trim()
+    };
+    if (!data.name || !data.category) { $('productFormError').textContent = 'Name and category are required.'; return; }
+    try {
+      if (id) {
+        await update(ref(db, `products/${id}`), data);
+        showToast('Product updated', 'success');
+      } else {
+        const newRef = push(ref(db, 'products'));
+        await set(newRef, data);
+        showToast('Product added', 'success');
+      }
+      $('productModal').classList.remove('show');
+    } catch (err) {
+      $('productFormError').textContent = err.message;
+    }
+  });
+
+  // === RENDER: ORDERS ===
+  function renderOrders() {
+    const tbody = $('ordersTableBody');
+    const list = Object.values(orders).sort((a,b) => (b.date||0) - (a.date||0));
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="table-empty">No orders yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(o => `
+      <tr>
+        <td><strong>#${(o.orderId || '').slice(-6)}</strong></td>
+        <td>${o.username || '—'}</td>
+        <td>${o.phoneNumber || '—'}</td>
+        <td class="text-muted">${o.userEmail || '—'}</td>
+        <td style="max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${o.shippingAddress || ''}">${o.shippingAddress || '—'}</td>
+        <td class="text-muted">${o.date ? new Date(o.date).toLocaleDateString() : '—'}</td>
+        <td><strong>₹${o.totalAmount || 0}</strong></td>
+        <td>
+          <select class="status-select" data-order-status="${o.orderId}">
+            ${['Pending','Confirmed','Preparing','Shipped','Delivered','Cancelled'].map(s =>
+              `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`
+            ).join('')}
+          </select>
+        </td>
+        <td>
+          <button class="btn-icon-only danger" data-delete-order="${o.orderId}" data-order-user="${o._userId}" title="Delete"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('[data-order-status]').forEach(sel => {
+      sel.addEventListener('change', async (e) => {
+        const oid = sel.dataset.orderStatus;
+        const order = orders[oid];
+        if (!order) return;
+        try {
+          await update(ref(db, `orders/${order._userId}/${oid}`), { status: e.target.value });
+          showToast('Status updated', 'success');
+        } catch (err) {
+          showToast('Error: ' + err.message, 'error');
+        }
+      });
+    });
+    tbody.querySelectorAll('[data-delete-order]').forEach(b => {
+      b.addEventListener('click', () => {
+        pendingDelete = { type: 'order', id: b.dataset.deleteOrder, orderUserId: b.dataset.orderUser };
+        $('confirmMessage').textContent = `Delete order #${b.dataset.deleteOrder.slice(-6)}? This cannot be undone.`;
+        $('confirmModal').classList.add('show');
+      });
+    });
+  }
+
+  // === RENDER: RECENT ORDERS (dashboard) ===
+  function renderRecentOrders() {
+    const tbody = $('recentOrdersBody');
+    const list = Object.values(orders).sort((a,b) => (b.date||0) - (a.date||0)).slice(0, 5);
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No orders yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(o => `
+      <tr>
+        <td><strong>#${(o.orderId || '').slice(-6)}</strong></td>
+        <td>${o.username || '—'}</td>
+        <td>₹${o.totalAmount || 0}</td>
+        <td class="text-muted">${o.date ? new Date(o.date).toLocaleDateString() : '—'}</td>
+        <td><span class="status-badge" style="background:${statusBg(o.status)}; color:${statusFg(o.status)};">${o.status || 'Pending'}</span></td>
+      </tr>
+    `).join('');
+  }
+
+  function statusBg(s) {
+    const map = { Pending:'rgba(245,158,11,0.15)', Confirmed:'rgba(59,130,246,0.15)', Preparing:'rgba(139,92,246,0.15)', Shipped:'rgba(6,182,212,0.15)', Delivered:'rgba(16,185,129,0.15)', Cancelled:'rgba(239,68,68,0.15)' };
+    return map[s] || 'rgba(107,114,128,0.15)';
+  }
+  function statusFg(s) {
+    const map = { Pending:'#f59e0b', Confirmed:'#3b82f6', Preparing:'#8b5cf6', Shipped:'#06b6d4', Delivered:'#10b981', Cancelled:'#ef4444' };
+    return map[s] || '#6b7280';
+  }
+
+  // === RENDER: SLIDER ===
+  function renderSlider() {
+    const tbody = $('sliderTableBody');
+    const list = Object.entries(sliderImages);
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="3" class="table-empty">No slider images yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(([id, img]) => `
+      <tr>
+        <td><img class="thumb" style="width:80px; height:48px;" src="${img.downloadURL || img.imageUrl || ''}" alt=""></td>
+        <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" class="text-muted">${img.downloadURL || img.imageUrl || ''}</td>
+        <td>
+          <button class="btn-icon-only danger" data-delete-slider="${id}" title="Delete"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('[data-delete-slider]').forEach(b => {
+      b.addEventListener('click', () => {
+        pendingDelete = { type: 'slider', id: b.dataset.deleteSlider };
+        $('confirmMessage').textContent = 'Delete this slider image? This cannot be undone.';
+        $('confirmModal').classList.add('show');
+      });
+    });
+  }
+
+  $('addSliderBtn').addEventListener('click', () => {
+    $('sliderFormError').textContent = '';
+    $('sliderForm').reset();
+    $('sliderModal').classList.add('show');
+  });
+  $('closeSliderModal').addEventListener('click', () => $('sliderModal').classList.remove('show'));
+  $('sliderModal').addEventListener('click', (e) => { if (e.target === $('sliderModal')) $('sliderModal').classList.remove('show'); });
+
+  $('sliderForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const url = $('sliderImageUrl').value.trim();
+    if (!url) { $('sliderFormError').textContent = 'Image URL is required.'; return; }
+    try {
+      const newRef = push(ref(db, 'sliderImages'));
+      await set(newRef, { downloadURL: url });
+      showToast('Slider image added', 'success');
+      $('sliderModal').classList.remove('show');
+    } catch (err) {
+      $('sliderFormError').textContent = err.message;
+    }
+  });
+
+  // === RENDER: MESSAGES ===
+  function renderMessages() {
+    const tbody = $('messagesTableBody');
+    const list = Object.entries(messages).map(([id, m]) => ({ id, ...m })).sort((a,b) => (b.date||0) - (a.date||0));
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="table-empty">No messages yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(m => `
+      <tr>
+        <td class="text-muted">${m.date ? new Date(m.date).toLocaleDateString() : '—'}</td>
+        <td><strong>${m.name || '—'}</strong></td>
+        <td class="text-muted">${m.email || '—'}</td>
+        <td style="max-width:320px; white-space:normal;">${m.message || '—'}</td>
+      </tr>
+    `).join('');
+  }
+
+  // === CONFIRM DELETE ===
+  $('closeConfirmModal').addEventListener('click', () => { $('confirmModal').classList.remove('show'); pendingDelete = null; });
+  $('cancelConfirmBtn').addEventListener('click', () => { $('confirmModal').classList.remove('show'); pendingDelete = null; });
+  $('confirmModal').addEventListener('click', (e) => { if (e.target === $('confirmModal')) { $('confirmModal').classList.remove('show'); pendingDelete = null; } });
+
+  $('confirmDeleteBtn').addEventListener('click', async () => {
+    if (!pendingDelete) return;
+    try {
+      if (pendingDelete.type === 'product') {
+        await remove(ref(db, `products/${pendingDelete.id}`));
+        showToast('Product deleted', 'success');
+      } else if (pendingDelete.type === 'order') {
+        await remove(ref(db, `orders/${pendingDelete.orderUserId}/${pendingDelete.id}`));
+        showToast('Order deleted', 'success');
+      } else if (pendingDelete.type === 'slider') {
+        await remove(ref(db, `sliderImages/${pendingDelete.id}`));
+        showToast('Slider image deleted', 'success');
+      }
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    }
+    $('confirmModal').classList.remove('show');
+    pendingDelete = null;
+  });
+
+  // === INITIAL RENDER ON VIEW SWITCH (ensure lists refresh) ===
+  const origSwitch = switchView;
+  switchView = function(view) {
+    origSwitch(view);
+    if (view === 'products') renderProducts();
+    if (view === 'orders') renderOrders();
+    if (view === 'slider') renderSlider();
+    if (view === 'messages') renderMessages();
+    if (view === 'dashboard') renderRecentOrders();
+  };
+  // rebind buttons to new switchView
+  $$('.sidebar-link[data-view]').forEach(btn => {
+    btn.onclick = () => switchView(btn.dataset.view);
+  });
+  $$('.bottom-nav-item[data-view]').forEach(btn => {
+    btn.onclick = () => switchView(btn.dataset.view);
+  });
+
+</script>
+</body>
+</html>
